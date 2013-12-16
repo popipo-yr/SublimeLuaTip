@@ -306,18 +306,20 @@ class LuaTipCollector (LuaTip, sublime_plugin.EventListener):
 	#
 	def on_post_save_helper(self, view):
 		self.clear()
-		open_folder_arr = view.window().folders()
-		if self._collector_thread != None:
-			self._collector_thread.stop()
-		self._collector_thread = LuaTipCollectorThread(self, open_folder_arr, 30)
-		self._collector_thread.start()
+		if None != view.window(): 
+			open_folder_arr = view.window().folders()
+			#if None != open_folder_arr:
+			if self._collector_thread != None:
+				self._collector_thread.stop()
+			self._collector_thread = LuaTipCollectorThread(self, open_folder_arr, 30)
+			self._collector_thread.start()
 
 	#
 	# Helper
 	#
 	def on_activated_helper(self, view):
 		current_file = view.file_name()
-		if is_lua_file(current_file):
+		if None != current_file and is_lua_file(current_file):
 			self.clearCur()
 			if self._curTipCollector_thread != None:
 				self._curTipCollector_thread.stop()
