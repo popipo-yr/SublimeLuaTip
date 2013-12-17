@@ -52,6 +52,8 @@ class Tip:
 class LuaTip:
 	_functions = []
 	_curfunctions = []
+	_requires = []
+
 	MAX_WORD_SIZE = 100
 	MAX_FUNC_SIZE = 50
 
@@ -59,14 +61,17 @@ class LuaTip:
 		self._curfunctions = []
 	def clear(self):
 		self._functions = []
+		self._requires = []
 	def addFunc(self, name, signature, filename, hintStr, className, tipType):
 		self._functions.append(Tip(name, signature, filename, hintStr, className, tipType))
 	def addFuncCur(self, name, signature, filename, hintStr, className, tipType):
 		self._curfunctions.append(Tip(name, signature, filename, hintStr, className, tipType))
+	def addRequire(self,hintStr):
+		self._requires.append(hintStr)	
 	def get_autocomplete_list_helper(self, word, whichFuncs):
 		autocomplete_list = []
 		for method_obj in whichFuncs:
-			if (word in method_obj.name()) or (word in method_obj.className()):
+			if (word in method_obj.name()) or (word in method_obj.className()) or (word in method_obj.hintStr()):
 				method_str_to_append = method_obj.name() + '(' + method_obj.signature()+ ')'
 				
 				if method_obj.className() != "":
@@ -84,11 +89,19 @@ class LuaTip:
 				autocomplete_list.append((method_str_to_append + '\t' + method_file_location,
 					method_str_hint))	
 		return autocomplete_list
+	def get_autocomplete_require_helper(self, word):
+		autocomplete_list = []
+		requireset = set(self._requires)
+		for requirestr in requireset:
+			if (word in requirestr):				
+				autocomplete_list.append((requirestr,requirestr))	
+		return autocomplete_list	
 
 	def get_autocomplete_list(self, word):
 		autocomplete_list = []
 		autocomplete_list += self.get_autocomplete_list_helper(word, self._functions)
 		autocomplete_list += self.get_autocomplete_list_helper(word, self._curfunctions)
+		autocomplete_list += self.get_autocomplete_require_helper(word)
 		autocomplete_list.append(("---luatip" + '\t' + "xs","---luatip")) 
 		return autocomplete_list
 
@@ -170,7 +183,11 @@ class LuaTipCollectorThread(threading.Thread):
 					stHint = preHint + stHint + endHint
 
 					self.collector.addFunc(m.group(signIndex-1), m.group(signIndex), basename(file_name), stHint, className, tipType)
-
+			if "require" in line:
+				matches = re.search('require\((.*)\)', line)
+				if None != matches:
+					stHint = "require(" + matches.group(1) + ")"
+					self.collector.addRequire(stHint)
 	#
 	# Get luascript files paths
 	#
