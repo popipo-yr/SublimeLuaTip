@@ -308,10 +308,30 @@ class LuaTipCollector (LuaTip, sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		current_file = view.file_name()
 		completions = []
+		compl_default = []
+		compl_full = []
+
+		if prefix.upper().find("CC") == 0:
+			return 0
+
 		if is_lua_file(current_file):
-			return self.get_autocomplete_list(prefix)
-			completions.sort()
-		return (completions,sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+
+			completions.extend(self.get_autocomplete_list(prefix))
+			
+			for c in view.extract_completions(prefix):
+				compl_default.append((c,c))
+
+        	compl_default = list(set(compl_default)) 
+        	compl_full.extend(compl_default)
+        	compl_full.extend(completions)       	
+        	compl_full.sort()
+
+        	return (compl_full, sublime.INHIBIT_WORD_COMPLETIONS |
+        		sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+			
+		return None
+
+		
 	#
 	#Activate view
 	# 
