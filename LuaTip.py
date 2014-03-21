@@ -313,6 +313,8 @@ class LuaTipCollector (LuaTip, sublime_plugin.EventListener):
 
 		if prefix.upper().find("CC") == 0:
 			return 0
+		if prefix.upper().find("KCC") == 0:
+			return 0
 
 		if is_lua_file(current_file):
 
